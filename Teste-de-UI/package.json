@@ -1,0 +1,20 @@
+{
+  "name": "teste-de-ui",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "cypress open",
+    "test": "cypress run"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@faker-js/faker": "^9.4.0",
+    "cypress": "^14.0.2"
+  },
+  "dependencies": {
+    "teste-de-ui": "file:"
+  }
+}
