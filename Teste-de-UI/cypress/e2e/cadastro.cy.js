@@ -1,50 +1,72 @@
 import { faker } from '@faker-js/faker'
 
-function generateStrongPassword() {
-  const lowercase = faker.string.alpha({ length: 1, casing: 'lower' })
-  const number = faker.string.numeric(1)
-  const specialChar = faker.helpers.arrayElement(['@', '#', '$', '%', '&', '*', '!'])
-  const randomChars = faker.string.alpha({ length: 3 }) // Garantir tamanho mínimo de 6
-  
-  return faker.helpers.shuffle(`${lowercase}${number}${specialChar}${randomChars}`).join('')
+function generateNumericPassword() {
+  const length = faker.number.int({ min: 8, max: 12 })
+  return faker.string.numeric(length)
 }
 
+function generateCPF() {
+  let cpf = Array.from({ length: 9 }, () => faker.number.int({ min: 0, max: 9 }));
+  
+  const calcDV = (cpfArray, multiplicador) => {
+    let sum = cpfArray.reduce((acc, num, index) => acc + num * (multiplicador - index), 0);
+    let mod = sum % 11;
+    return mod < 2 ? 0 : 11 - mod;
+  };
+
+  cpf.push(calcDV(cpf, 10));
+  cpf.push(calcDV(cpf, 11));
+
+  return cpf.join('');
+}
+
+const name = faker.person.fullName();
+const cpf = generateCPF();
 const email = faker.internet.email()
-const emailDiferente = faker.internet.email()
-const password = generateStrongPassword()
+const emailDifferent = faker.internet.email()
+const password = generateNumericPassword()
+
+/*
+const birthday = faker.date.birthdate({ min: 18, max: 75, mode: 'age' });
+const formattedDate = birthday.toLocaleDateString('pt-BR', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric'
+}).replace(/\//g, '')
+const gender = faker.helpers.arrayElement(['MASCULINO', 'FEMININO'])
+const natural = 'Brasileiro'
+const formation = faker.helpers.arrayElement(['ANALFABETO', 'ATEQUARTASERIEINCOMPLETAENSINOFUNDAMENTAL', 'QUARTASERIECOMPLETAENSINO', 'QUINTAOITAVAENSINOFUNDAMENTAL', 'ENSINOFUNDAMENTALCOMPLETO', 'ENSINOMEDIOINCOMPLETO', 'ENSINOMEDIOCOMPLETO', 
+  'EDUCACAOSUPERIORINCOMPLETA', 'EDUCACAOSUPERIORCOMPLETA', 'POSGRADUACAOCOMPLETA', 'DOUTORADOCOMPLETO', 'SEGUNDO_GRAU_TECNICO_INCOMPLETO', 'SEGUNDO_GRAU_TECNICO_COMPLETO', 'MESTRADOCOMPLETO', 'POS_DOUTORADO'])
+const curriculum = 'Curriculum.pdf'
+*/
 
 describe('Formulário de cadastro do Solides', () => {
-  beforeEach(() => {
-    cy.intercept('POST', '**/recaptcha/api2/reload**', { statusCode: 200, body: {} }).as('recaptchaReload');
-    cy.intercept('POST', '**/recaptcha/api2/userverify**', { statusCode: 200, body: { success: true } }).as('recaptchaVerify');
-    cy.intercept('POST', '**/recaptcha/api2/clr**', { statusCode: 200, body: {} }).as('recaptchaClear');
-    
+  beforeEach(() => {   
     cy.visit('/')
   });
 
-  it.only('Preencher o formulário corretamente e enviar', () => {
-    cy.preencherFormulario(email, email, password, password)
-    cy.wait('@recaptchaReload');
-    cy.wait('@recaptchaVerify');
-    cy.wait('@recaptchaClear');
-    //cy.submeterFormulario()
+  it('Preencher o formulário corretamente e enviar', () => {
+    cy.preencherFormulario(name, cpf, email, email, password, password)
+    cy.submeterFormulario()
+    //cy.completarFormulario(formattedDate, gender, natural, formation, curriculum)
   })
 
   it('Deixar campos obrigatórios vazios', () => {
     cy.submeterFormulario()
-    cy.get('[data-cy="error-email"]').should('be.visible').contains('O campo E-mail é obrigatório.')
-    cy.get('[data-cy="error-email-confirmation"]').should('be.visible').contains('O campo Confirmação de E-mail é obrigatório.')
-    cy.get('[data-cy="error-password"]').should('be.visible').contains('O campo Senha é obrigatório.')
-    cy.get('[data-cy="error-password-confirmation"]').should('be.visible').contains('O campo Confirmação de Senha é obrigatório.')
+    cy.get('.fa').should('be.visible')
+    cy.get('.mensagem').should('be.visible').contains('Erro ao acessar esta página!')
+    cy.get('.subMensagem').should('be.visible').contains('Existe um problema com o recurso que você está procurando e ele não pode ser exibido.')
   })
 
   it('Digitar uma senha fraca', () => {
-    cy.preencherFormulario(email, email, '12345', '12345')
-    cy.get(':nth-child(2) > .flex-row').should('be.visible').contains('A senha deve seguir as regras abaixo')
+    cy.preencherFormulario(name, cpf, email, email, '12345', '12345')
+    cy.submeterFormulario()
+    cy.get('li').should('be.visible').contains('A senha deve seguir as regras informadas no campo "Senha".')
   })
 
   it('Digitar e-mails diferentes nos campos de "E-mail" e "Confirmação de E-mail"', () => {
-    cy.preencherFormulario(email, emailDiferente, password, password)
-    cy.get(':nth-child(2) > :nth-child(2) > .flex-row').should('be.visible').contains('Os e-mails não coincidem. Tente novamente')
+    cy.preencherFormulario(name, cpf, email, emailDifferent, password, password)
+    cy.submeterFormulario()
+    cy.get('li').should('be.visible').contains('Email e Confirmação Email não conferem.')
   })
 })
