@@ -40,7 +40,7 @@ const formation = faker.helpers.arrayElement(['ANALFABETO', 'ATEQUARTASERIEINCOM
 const curriculum = 'Curriculum.pdf'
 */
 
-describe('Formulário de cadastro do Solides', () => {
+describe('Teste do formulário de cadastro', () => {
   beforeEach(() => {   
     cy.visit('/')
   });
