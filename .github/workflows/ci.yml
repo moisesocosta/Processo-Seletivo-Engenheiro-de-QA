@@ -52,7 +52,7 @@ jobs:
         run: npm install
 
       - name: Executar testes de API
-        working-directory: Teste-de-API
+        working-directory: Testes-de-API
         run: npm test || true
 
       - name: Armazenar logs dos testes
@@ -68,8 +68,12 @@ jobs:
       - name: Checkout do repositório
         uses: actions/checkout@v4
 
-      - name: Instalar k6
-        run: sudo apt-get update && sudo apt-get install -y k6
+      - name: Adicionar repositório do k6 e instalar
+        run: |
+          curl -fsSL https://dl.k6.io/key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/k6-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install -y k6
 
       - name: Executar teste de performance
         working-directory: Teste-de-Performance
