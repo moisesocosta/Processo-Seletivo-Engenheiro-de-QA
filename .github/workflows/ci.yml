@@ -1,0 +1,82 @@
+name: Testes Automatizados
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  teste-ui:
+    name: Teste de UI (Cypress)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar dependências
+        working-directory: Teste-de-UI
+        run: npm install
+
+      - name: Executar testes do Cypress
+        working-directory: Teste-de-UI
+        run: npm test || true
+
+      - name: Armazenar screenshots e vídeos
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-teste-ui
+          path: Teste-de-UI/cypress/screenshots
+
+  teste-api:
+    name: Testes de API (Jest)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar dependências
+        working-directory: Teste-de-API
+        run: npm install
+
+      - name: Executar testes de API
+        working-directory: Teste-de-API
+        run: npm test || true
+
+      - name: Armazenar logs dos testes
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-teste-api
+          path: Testes-de-API/test-results
+
+  teste-performance:
+    name: Testes de Performance (k6)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Instalar k6
+        run: sudo apt-get update && sudo apt-get install -y k6
+
+      - name: Executar teste de performance
+        working-directory: Teste-de-Performance
+        run: k6 run load_test.js || true
+
+      - name: Armazenar logs dos testes de performance
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-teste-performance
+          path: Testes-de-Performance/*.json
