@@ -48,7 +48,7 @@ jobs:
           node-version: 20
 
       - name: Instalar dependências
-        working-directory: Teste-de-API
+        working-directory: Testes-de-API
         run: npm install
 
       - name: Executar testes de API
@@ -75,8 +75,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y k6
 
-      - name: Executar teste de performance
-        working-directory: Teste-de-Performance
+      - name: Executar testes de performance
+        working-directory: Testes-de-Performance
         run: k6 run load_test.js || true
 
       - name: Armazenar logs dos testes de performance
